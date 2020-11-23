@@ -1,4 +1,3 @@
-
 version: 2.1
 
 workflows:
@@ -12,20 +11,23 @@ workflows:
 jobs:
   build:
     docker:
-      - image: jdrouet/docker-with-buildx:stable
+      - image: cimg/base:stable
     steps:
-      - checkout
       - setup_remote_docker:
           version: 19.03.13
+      - checkout
       - run:
-          name: Creating buildx environment
-          command: | 
-            docker context create builder
-            docker buildx create builder --use
-      - run:
-          name: Building and pushing images 
+          name: Building image
           command: |
+            docker build -t $CIRCLE_PROJECT_REPONAME:$CIRCLE_BUILD_NUM .
             echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
-            docker buildx build --push \
-              --platform linux/arm/v7,linux/arm64/v8,linux/amd64 \
-              --tag $DOCKER_HUB_USERNAME/pve-node-command:latest .
+      - run:
+          name: Pushing new image version
+          command: |
+            docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BUILD_NUM $DOCKER_HUB_USERNAME/$CIRCLE_PROJECT_REPONAME:$CIRCLE_BUILD_NUM
+            docker push $DOCKER_HUB_USERNAME/$CIRCLE_PROJECT_REPONAME:$CIRCLE_BUILD_NUM
+      - run:
+          name: Pushing latest version
+          command: |
+            docker tag $CIRCLE_PROJECT_REPONAME:$CIRCLE_BUILD_NUM $DOCKER_HUB_USERNAME/$CIRCLE_PROJECT_REPONAME:latest
+            docker push $DOCKER_HUB_USERNAME/$CIRCLE_PROJECT_REPONAME:latest
