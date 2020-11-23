@@ -1,0 +1,31 @@
+
+version: 2.1
+
+workflows:
+  version: 2
+  project_cicd:
+    jobs:
+      - build:
+          context:
+            - docker-hub
+
+jobs:
+  build:
+    docker:
+      - image: jdrouet/docker-with-buildx:stable
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+      - run:
+          name: Creating buildx environment
+          command: | 
+            docker context create builder
+            docker buildx create builder --use
+      - run:
+          name: Building and pushing images 
+          command: |
+            echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+            docker buildx build --push \
+              --platform linux/arm/v7,linux/arm64/v8,linux/amd64 \
+              --tag $DOCKER_HUB_USERNAME/$CIRCLE_PROJECT_REPONAME:latest .
