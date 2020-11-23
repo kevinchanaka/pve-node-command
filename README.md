@@ -30,7 +30,7 @@ Run the container with the following command:
 
 The environment variable file would consist of the values of the environment variables, refer below for a sample
 ```
-API_HOST=192.168.0.100
+API_HOST=192.168.0.110
 NODE_NAME=pve
 TOKEN_USER=myuser
 TOKEN_NAME=mytoken
